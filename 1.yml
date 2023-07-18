@@ -1,0 +1,27 @@
+---
+- name: Install Oracle Database 19c
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Ensure directory exists
+      file:
+        path: /home/oracle/scripts
+        state: directory
+    - name: Create the empty start_all.sh file
+      file:
+        path: /home/oracle/scripts/start_all.sh
+        state: touch      
+    - name: Create the start_all.sh file
+      blockinfile:
+        path: /home/oracle/scripts/start_all.sh
+        block: |
+          #!/bin/bash
+          . /home/oracle/scripts/setEnv.sh
+
+          export ORAENV_ASK=NO
+          . oraenv
+          export ORAENV_ASK=YES
+
+          dbstart /u01/app/oracle/product/19.3/dbhome_1
+        marker: "# BEGIN ANSIBLE MANAGED BLOCK"

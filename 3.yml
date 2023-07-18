@@ -1,0 +1,46 @@
+---
+- name: Install Oracle Database 19c
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Install required dependencies
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - bind-utils
+        - compat-libcap1
+        - glibc-devel
+        - psmisc
+        - xorg-x11-utils
+        - xorg-x11-xauth
+
+    - name: Check if preinstall package is already installed
+      command: rpm -q oracle-database-preinstall-19c-1.0-1.el7.x86_64
+      register: pre_check
+      ignore_errors: true
+
+    - name: Install Oracle preinstall RPM
+      command: rpm -ivh /tmp/oracle-database-preinstall-19c-1.0-1.el7.x86_64.rpm
+      when: pre_check.rc != 0
+
+
+    - name: Delete files in oraInventory directory
+      shell: rm -rf /u01/app/oraInventory/*
+      args:
+        warn: false
+
+    - name: Run Oracle Installer
+      become: true
+      become_user: oracle
+      become_method: su
+      shell: >
+        ./runInstaller -ignorePrereq -waitforcompletion -silent -responseFile /u01/app/oracle/product/19.3/dbhome_1/install/response/db_install.rsp oracle.install.option=INSTALL_DB_SWONLY UNIX_GROUP_NAME=oinstall INVENTORY_LOCATION=/u01/app/oraInventory SELECTED_LANGUAGES=en,en_GB ORACLE_BASE=/u01/app/oracle/ ORACLE_HOME=/u01/app/oracle/product/19.3/dbhome_1 oracle.install.db.InstallEdition=EE oracle.install.db.OSDBA_GROUP=dba oracle.install.db.OSBACKUPDBA_GROUP=dba oracle.install.db.OSDGDBA_GROUP=dba oracle.install.db.OSKMDBA_GROUP=dba oracle.install.db.OSRACDBA_GROUP=dba SECURITY_UPDATES_VIA_MYORACLESUPPORT=false DECLINE_SECURITY_UPDATES=true
+      args:
+        chdir: /u01/app/oracle/product/19.3/dbhome_1
+      ignore_errors: yes
+  handlers:
+    - name: Reboot server
+      reboot:
+

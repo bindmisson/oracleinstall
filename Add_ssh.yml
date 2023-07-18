@@ -1,0 +1,12 @@
+---
+- name: Add SSH key
+  hosts: target_hosts
+  become: true
+
+  tasks:
+    - name: Add SSH key for a user
+      authorized_key:
+        user: "{{ ssh_user }}"
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+        state: present
+

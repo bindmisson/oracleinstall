@@ -1,0 +1,5 @@
+[all]
+db1 ansible_ssh_host=3.7.252.179
+[all:vars]
+ansible_python_interpreter=/usr/bin/python2
+ansible_invalid_task_attribute_failed=warn
